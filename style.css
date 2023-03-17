@@ -1,0 +1,63 @@
+:root {
+    --top-bar-height: 120px;
+    --top-bar-background-color: #2a2f3f;
+    --bottom-bar-height: 100px;
+    --bottom-bar-background-color: #232838;
+    --mid-content-background-color: #1d212e;
+}
+
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: var(--top-bar-height);
+    background-color: var(--top-bar-background-color);
+}
+
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: var(--bottom-bar-height);
+    background-color: var(--bottom-bar-background-color);
+}
+
+.mid-content {
+    position: fixed;
+    left: 0;
+    top: var(--top-bar-height);
+    width: 100vw;
+    height: calc(100vh - var(--top-bar-height) - var(--bottom-bar-height));
+    background-color: var(--mid-content-background-color);
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.wpm-test {
+    max-width: 1000px;
+    width: calc(100% - 50px);
+    height: fit-content;
+    min-height: 10px;
+    background: red;
+    display: flex;
+}
+
+.wpm-test .word {
+    display: flex;
+}
+
+.wpm-test .word .letter {
+    width: fit-content;
+    font-size: 23px;
+    font-family: monospace;
+}
+
+.wpm-test .space {
+    width: 12px;
+}
