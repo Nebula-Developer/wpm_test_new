@@ -44,8 +44,8 @@
     width: calc(100% - 50px);
     height: fit-content;
     min-height: 10px;
-    background: red;
     display: flex;
+    position: relative;
 }
 
 .wpm-test .word {
@@ -60,4 +60,21 @@
 
 .wpm-test .space {
     width: 12px;
+}
+
+.correct {
+    background: green;
+}
+
+.incorrect {
+    background: red;
+}
+
+#cursor {
+    position: relative;
+    top: 0;
+    left: 0;
+    height: 30px;
+    width: 2px;
+    background: white;
 }
