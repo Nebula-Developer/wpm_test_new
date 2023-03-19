@@ -1,19 +1,29 @@
-
-
-var wpm_test = {
-    cursor_index: 0,
-    text: "This is a test of the WPM test system",
-    user_text: "",
-    text_elms: [],
-    test_active: false
+const wpm_test_types = {
+    "words": 0,
+    "time": 1
 }
 
+var wpm_test_base = {
+    cursor_index: 0,
+    text: "",
+    user_text: "",
+    text_elms: [],
+    test_active: false,
+
+    test_mode: "words",
+    test_config: {
+        wordCount: 10,
+        time: 10000,
+        start: 0,
+        end: 0
+    }
+};
+
+var wpm_test = Object.assign({}, wpm_test_base);
+
 function create_test(text) {
+    wpm_test = Object.assign({}, wpm_test_base);
     wpm_test.text = text;
-    wpm_test.cursor_index = 0;
-    wpm_test.test_active = false;
-    wpm_test.text_elms = [];
-    wpm_test.user_text = "";
 
     var test = $("#wpm-test");
     test.empty();
@@ -56,14 +66,60 @@ function create_word(word) {
     };
 }
 
-create_test("Hello, world!");
+const word_list = [
+    "the", "of", "if", "can", "also",
+    "and", "to", "in", "is", "you",
+    "that", "it", "for", "was", "on",
+    "are", "as", "with", "his", "they",
+    "be", "at", "one", "have", "this",
+    "from", "or", "had", "by", "hot",
+    "nation", "but", "some", "what", "there",
+    "we", "can", "out", "other", "were",
+    "all", "there", "when", "up", "use",
+    "your", "how", "said", "an", "each",
+    "she", "which", "do", "their", "time",
+    "if", "will", "way", "about", "many",
+    "then", "them", "write", "would", "like"
+];
+
+function gen_sentence(words) {
+    var sentence = "";
+    for (var i = 0; i < words; i++) {
+        var word = word_list[Math.floor(Math.random() * word_list.length)];
+        sentence += word + (i == words - 1 ? "" : " ");
+    }
+    return sentence;
+}
+
+function calculate_test_results() {
+    if (wpm_test.test_mode == "words") {
+        // Calculate WPM based on how long it took
+        // to type the specified number of words,
+        // also counting how big the words were
+        var time = wpm_test.test_config.end - wpm_test.test_config.start;
+        var sentenceLength = wpm_test.text.length;
+        var wpm = (sentenceLength / 5) / (time / 60000);
+        return wpm;
+    } else if (wpm_test.test_mode == "time") {
+        // Calculate WPM based on how many words
+        // were typed in the specified time
+        var time = wpm_test.test_config.end - wpm_test.test_config.start;
+        var sentenceLength = wpm_test.text.length;
+        var wpm = (sentenceLength / 5) / (time / 60000);
+        return wpm;
+    }
+}
 
 document.addEventListener('keydown', (e) => {
-    e.preventDefault();
     if (!wpm_test.test_active) {
         wpm_test.test_active = true;
         console.log("Test started");
+        wpm_test.test_config.start = Date.now();
     }
+
+    if (e.ctrlKey || e.altKey || e.metaKey) {
+        return;
+    } else e.preventDefault();
 
     var key = e.key;
 
@@ -76,17 +132,15 @@ document.addEventListener('keydown', (e) => {
         }
     }
     
-    else if (key.length != 1 || wpm_test.cursor_index >= wpm_test.text_elms.length) {
+    else if (key.length != 1) {
         return;
     }
 
     else if (wpm_test.text[wpm_test.cursor_index] == key) {
-        console.log("Correct");
         wpm_test.text_elms[wpm_test.cursor_index].addClass("correct");
         wpm_test.user_text += key;
         wpm_test.cursor_index++;
     } else {
-        console.log("Incorrect");
         wpm_test.text_elms[wpm_test.cursor_index].addClass("incorrect");
         wpm_test.user_text += key;
         wpm_test.cursor_index++;
@@ -97,4 +151,13 @@ document.addEventListener('keydown', (e) => {
         $("#cursor").css("top", curElm.position().top);
         $("#cursor").css("left", curElm.position().left);
     }
+
+    if (wpm_test.cursor_index >= wpm_test.text_elms.length - 1) {
+        console.log("Test ended");
+        wpm_test.test_active = false;
+        wpm_test.test_config.end = Date.now();
+        console.log("WPM: " + calculate_test_results());
+    }
 });
+
+create_test(gen_sentence(10));

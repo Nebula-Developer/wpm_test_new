@@ -56,18 +56,19 @@
     width: fit-content;
     font-size: 23px;
     font-family: monospace;
+    color: white;
 }
 
 .wpm-test .space {
     width: 12px;
 }
 
-.correct {
-    background: green;
+.wpm-test .word .letter.correct {
+    color: rgb(89, 255, 89);
 }
 
-.incorrect {
-    background: red;
+.wpm-test .word .letter.incorrect {
+    color: rgb(255, 114, 114);
 }
 
 #cursor {
@@ -77,4 +78,5 @@
     height: 30px;
     width: 2px;
     background: white;
+    transition: all 0.1s ease-out;
 }
