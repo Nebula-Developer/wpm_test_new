@@ -12,7 +12,7 @@ const wpm_test_base = {
 
     test_mode: "words",
     test_config: {
-        wordCount: 25,
+        wordCount: 10,
         time: 10000,
         start: 0,
         end: 0
@@ -22,7 +22,7 @@ const wpm_test_base = {
 };
 
 var wpm_test = structuredClone(wpm_test_base);
-var sim_on_start = null;
+var sim_on_start = 100;
 
 function create_test(text) {
     wpm_test = structuredClone(wpm_test_base);
@@ -39,17 +39,11 @@ function create_test(text) {
         test.append(word.element);
 
         wpm_test.text_elms.push(...word.letters);
-            
-        if (i != words.length - 1) {
-            var space = $("<div class='space'></div>");
-            word.element.append(space);
-            wpm_test.text_elms.push(space);
-        }
+        
+        var space = $("<div class='space'></div>");
+        word.element.append(space);
+        wpm_test.text_elms.push(space);
     }
-
-    var endChar = $("<div class='end-char'></div>");
-    test.append(endChar);
-    wpm_test.text_elms.push(endChar);
 
     wpm_test.cursor_index = 0;
 }
@@ -115,7 +109,6 @@ function calculate_test_results() {
     }
 }
 
-
 /**
  * @param {KeyboardEvent} e
  */
@@ -178,10 +171,7 @@ function handle_keypress(e) {
     }
 
     if (wpm_test.cursor_index >= wpm_test.text_elms.length - 1) {
-        wpm_test.test_active = false;
-        wpm_test.test_config.end = Date.now();
-        console.log("WPM: " + calculate_test_results());
-        console.log("Accuracy: " + calculate_test_accuracy());
+        end_test();
     }
 }
 
@@ -208,16 +198,15 @@ function start_test() {
     wpm_test.test_config.start = null;
 }
 
-create_test(gen_sentence(wpm_test.test_config.wordCount));
+$("#wpm-test-restart").on('click', reset_test);
+$("#nav-results-restart-button").on('click', reset_test); 
 
-$("#wpm-test-restart").on('click', (e) => {
-    e.preventDefault();
+function reset_test() {
     create_test(gen_sentence(wpm_test.test_config.wordCount));
     start_test();
     $("#wpm-test").trigger("focus");
-});
-
-start_test();
+    $("#wpm-test-result").addClass("hidden");
+}
 
 var sim_lock = null;
 function simulate_wpm(wpm) {
@@ -227,7 +216,7 @@ function simulate_wpm(wpm) {
     var timePerChar = time / sentenceLength;
     var curChar = 0;
     if (sim_lock !== null) clearInterval(sim_lock);
-    sim_lock = setInterval(() => {
+    function inc_this() {
         if (curChar >= sentenceLength + 1) return;
         // handle_keypress({
         //     key: wpm_test.text[curChar],
@@ -236,6 +225,12 @@ function simulate_wpm(wpm) {
         cursor.css("top", wpm_test.text_elms[curChar].parent().offset().top - $("#wpm-test").offset().top);
         cursor.css("left", wpm_test.text_elms[curChar].offset().left - $("#wpm-test").offset().left);
         curChar++;
+    }
+
+    inc_this();
+
+    sim_lock = setInterval(() => {
+        inc_this();
     }, timePerChar);
 }
 
@@ -257,3 +252,21 @@ function repeat_test() {
     start_test();
     sim_on_start = wpm;
 }
+
+function end_test() {
+    wpm_test.test_active = false;
+    wpm_test.test_config.end = Date.now();
+
+    $("#wpm-test").trigger("blur");
+    $("#wpm-test-result").removeClass("hidden");
+
+    var wpm = calculate_test_results();
+    wpm = Math.round(wpm);
+    $("#wpm-test-result-wpm").text(wpm);
+    $("#wpm-test-result-cpm").text(wpm * 5);
+
+    var accuracy = calculate_test_accuracy();
+    $("#wpm-test-result-acc").text(Math.round(accuracy * 100));
+}
+
+reset_test();
