@@ -175,7 +175,16 @@ function handle_keypress(e) {
     }
 }
 
-document.addEventListener('keydown', (e) => { if (!wpm_test.test_active) return; handle_keypress(e); });
+document.addEventListener('keydown', (e) => {
+    if (!$("#wpm-test").is(":focus")) return;
+    if (e.key == "Tab") {
+        e.preventDefault();
+        $("#wpm-test-restart").trigger("focus");
+        return;
+    }
+    if (!wpm_test.test_active) return;
+    handle_keypress(e);
+});
 
 function calculate_test_accuracy() {
     var mistakes = wpm_test.mistakes.length;
@@ -195,6 +204,7 @@ $("#wpm-test-restart").on('click', (e) => {
     e.preventDefault();
     create_test(gen_sentence(10));
     start_test();
+    $("#wpm-test").trigger("focus");
 });
 
 start_test();

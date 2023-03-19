@@ -47,6 +47,13 @@
     min-height: 10px;
     display: flex;
     position: relative;
+    transition: filter 0.2s ease-out;
+    border: none;
+    outline: none;
+}
+
+.wpm-test:not(:focus) {
+    filter: blur(5px);
 }
 
 .wpm-test .word {
