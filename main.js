@@ -3,7 +3,7 @@ const wpm_test_types = {
     "time": 1
 }
 
-var wpm_test_base = {
+const wpm_test_base = {
     cursor_index: 0,
     text: "",
     user_text: "",
@@ -16,13 +16,15 @@ var wpm_test_base = {
         time: 10000,
         start: 0,
         end: 0
-    }
+    },
+
+    mistakes: []
 };
 
-var wpm_test = Object.assign({}, wpm_test_base);
+var wpm_test = structuredClone(wpm_test_base);
 
 function create_test(text) {
-    wpm_test = Object.assign({}, wpm_test_base);
+    wpm_test = structuredClone(wpm_test_base);
     wpm_test.text = text;
 
     var test = $("#wpm-test");
@@ -110,40 +112,53 @@ function calculate_test_results() {
     }
 }
 
-document.addEventListener('keydown', (e) => {
-    if (!wpm_test.test_active) {
-        wpm_test.test_active = true;
-        console.log("Test started");
-        wpm_test.test_config.start = Date.now();
-    }
 
-    if (e.ctrlKey || e.altKey || e.metaKey) {
-        return;
-    } else e.preventDefault();
-
+/**
+ * @param {KeyboardEvent} e
+ */
+function handle_keypress(e) {
+    if (wpm_test.test_config.start == null) wpm_test.test_config.start = Date.now();
     var key = e.key;
 
-    if (key == "Backspace") {
-        if (wpm_test.cursor_index > 0) {
-            wpm_test.cursor_index--;
-            wpm_test.text_elms[wpm_test.cursor_index].removeClass("correct");
-            wpm_test.text_elms[wpm_test.cursor_index].removeClass("incorrect");
-            wpm_test.user_text = wpm_test.user_text.substring(0, wpm_test.user_text.length - 1);
-        }
-    }
-    
-    else if (key.length != 1) {
-        return;
-    }
+    var isValidKey = (
+        (!e.metaKey && !e.ctrlKey && !e.altKey) &&
+        (key == "Backspace" || key == " " ||
+        key.length == 1)
+    );
 
-    else if (wpm_test.text[wpm_test.cursor_index] == key) {
-        wpm_test.text_elms[wpm_test.cursor_index].addClass("correct");
-        wpm_test.user_text += key;
-        wpm_test.cursor_index++;
-    } else {
-        wpm_test.text_elms[wpm_test.cursor_index].addClass("incorrect");
-        wpm_test.user_text += key;
-        wpm_test.cursor_index++;
+    if (!isValidKey) return;
+
+    switch (key) {
+        case "Backspace":
+            if (wpm_test.cursor_index > 0) {
+                wpm_test.cursor_index--;
+                wpm_test.text_elms[wpm_test.cursor_index].removeClass("correct");
+                wpm_test.text_elms[wpm_test.cursor_index].removeClass("incorrect");
+                wpm_test.user_text = wpm_test.user_text.substring(0, wpm_test.user_text.length - 1);
+            }
+            break;
+        
+        default:
+            e.preventDefault();
+            if (wpm_test.text[wpm_test.cursor_index] == key) {
+                wpm_test.text_elms[wpm_test.cursor_index].addClass("correct");
+                wpm_test.user_text += key;
+                wpm_test.cursor_index++;
+                break;
+            }
+
+            wpm_test.text_elms[wpm_test.cursor_index].addClass("incorrect");
+            wpm_test.user_text += key;
+
+            if (!wpm_test.mistakes.find(m => m.index == wpm_test.cursor_index)) {
+                wpm_test.mistakes.push({
+                    index: wpm_test.cursor_index,
+                    char: key
+                });
+            }
+
+            wpm_test.cursor_index++;
+            break;
     }
 
     var curElm = wpm_test.text_elms[wpm_test.cursor_index];
@@ -153,11 +168,33 @@ document.addEventListener('keydown', (e) => {
     }
 
     if (wpm_test.cursor_index >= wpm_test.text_elms.length - 1) {
-        console.log("Test ended");
         wpm_test.test_active = false;
         wpm_test.test_config.end = Date.now();
         console.log("WPM: " + calculate_test_results());
+        console.log("Accuracy: " + calculate_test_accuracy());
     }
-});
+}
+
+document.addEventListener('keydown', (e) => { if (!wpm_test.test_active) return; handle_keypress(e); });
+
+function calculate_test_accuracy() {
+    var mistakes = wpm_test.mistakes.length;
+    var sentenceLength = wpm_test.text.length;
+    var accuracy = (sentenceLength - mistakes) / sentenceLength;
+    return accuracy;    
+}
+
+function start_test() {
+    wpm_test.test_active = true;
+    wpm_test.test_config.start = null;
+}
 
 create_test(gen_sentence(10));
+
+$("#wpm-test-restart").on('click', (e) => {
+    e.preventDefault();
+    create_test(gen_sentence(10));
+    start_test();
+});
+
+start_test();

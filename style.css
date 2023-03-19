@@ -31,6 +31,7 @@
     width: 100vw;
     height: calc(100vh - var(--top-bar-height) - var(--bottom-bar-height));
     background-color: var(--mid-content-background-color);
+    flex-direction: column;
 }
 
 .flex-center {
@@ -79,4 +80,21 @@
     width: 2px;
     background: white;
     transition: all 0.1s ease-out;
+}
+
+#wpm-test-restart {
+    padding: 10px;
+    color: white;
+    border-radius: 5px;
+    border: none;
+    outline: none;
+    background: none;
+}
+
+#wpm-test-restart:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#wpm-test-restart:focus {
+    background-color: rgba(255, 255, 255, 0.2);
 }
