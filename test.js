@@ -90,6 +90,7 @@ function start_test() {
 }
 
 function reset_test() {
+    if (sim_lock != null) clearInterval(sim_lock);
     create_test(gen_sentence(wpm_test.test_config.wordCount));
     start_test();
     $("#wpm-test").trigger("focus");
