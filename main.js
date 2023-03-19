@@ -12,7 +12,7 @@ const wpm_test_base = {
 
     test_mode: "words",
     test_config: {
-        wordCount: 10,
+        wordCount: 25,
         time: 10000,
         start: 0,
         end: 0
@@ -22,6 +22,7 @@ const wpm_test_base = {
 };
 
 var wpm_test = structuredClone(wpm_test_base);
+var sim_on_start = null;
 
 function create_test(text) {
     wpm_test = structuredClone(wpm_test_base);
@@ -30,6 +31,7 @@ function create_test(text) {
     var test = $("#wpm-test");
     test.empty();
     test.append("<div id='cursor'></div>");
+    test.append("<div id='cursor-sim'></div>");
 
     var words = text.split(" ");
     for (var i = 0; i < words.length; i++) {
@@ -40,7 +42,7 @@ function create_test(text) {
             
         if (i != words.length - 1) {
             var space = $("<div class='space'></div>");
-            test.append(space);
+            word.element.append(space);
             wpm_test.text_elms.push(space);
         }
     }
@@ -57,6 +59,7 @@ function create_word(word) {
     var word_letters = [];
     for (var i = 0; i < word.length; i++) {
         var letter = $("<div class='letter'></div>");
+        if (i < 3) letter.addClass("bold-letter");
         letter.text(word[i]);
         word_elm.append(letter);
         word_letters.push(letter);
@@ -117,7 +120,14 @@ function calculate_test_results() {
  * @param {KeyboardEvent} e
  */
 function handle_keypress(e) {
-    if (wpm_test.test_config.start == null) wpm_test.test_config.start = Date.now();
+    if (wpm_test.test_config.start == null) {
+        wpm_test.test_config.start = Date.now();
+        if (sim_on_start !== null) {
+            simulate_wpm(sim_on_start);
+            sim_on_start = null;
+        }
+    }
+
     var key = e.key;
 
     var isValidKey = (
@@ -163,8 +173,8 @@ function handle_keypress(e) {
 
     var curElm = wpm_test.text_elms[wpm_test.cursor_index];
     if (curElm) {
-        $("#cursor").css("top", curElm.position().top);
-        $("#cursor").css("left", curElm.position().left);
+        $("#cursor").css("top", curElm.parent().offset().top - $("#wpm-test").offset().top);
+        $("#cursor").css("left", curElm.offset().left - $("#wpm-test").offset().left);
     }
 
     if (wpm_test.cursor_index >= wpm_test.text_elms.length - 1) {
@@ -198,13 +208,52 @@ function start_test() {
     wpm_test.test_config.start = null;
 }
 
-create_test(gen_sentence(10));
+create_test(gen_sentence(wpm_test.test_config.wordCount));
 
 $("#wpm-test-restart").on('click', (e) => {
     e.preventDefault();
-    create_test(gen_sentence(10));
+    create_test(gen_sentence(wpm_test.test_config.wordCount));
     start_test();
     $("#wpm-test").trigger("focus");
 });
 
 start_test();
+
+var sim_lock = null;
+function simulate_wpm(wpm) {
+    var cursor = $("#cursor-sim");
+    var sentenceLength = wpm_test.text.length;
+    var time = (sentenceLength / 5) / (wpm / 60000);
+    var timePerChar = time / sentenceLength;
+    var curChar = 0;
+    if (sim_lock !== null) clearInterval(sim_lock);
+    sim_lock = setInterval(() => {
+        if (curChar >= sentenceLength + 1) return;
+        // handle_keypress({
+        //     key: wpm_test.text[curChar],
+        //     preventDefault: () => {}
+        // });
+        cursor.css("top", wpm_test.text_elms[curChar].parent().offset().top - $("#wpm-test").offset().top);
+        cursor.css("left", wpm_test.text_elms[curChar].offset().left - $("#wpm-test").offset().left);
+        curChar++;
+    }, timePerChar);
+}
+
+function repeat_test() {
+    var wpm = calculate_test_results();
+    wpm_test.test_active = false;
+    wpm_test.test_config.start = null;
+    wpm_test.test_config.user_text = "";
+    wpm_test.test_config.mistakes = [];
+    for (var i = 0; i < wpm_test.text_elms.length; i++) {
+        wpm_test.text_elms[i].removeClass("correct");
+        wpm_test.text_elms[i].removeClass("incorrect");
+    }
+    wpm_test.cursor_index = 0;
+
+    $("#cursor").css("top", wpm_test.text_elms[0].offset().top - $("#wpm-test").offset().top);
+    $("#cursor").css("left", wpm_test.text_elms[0].offset().left - $("#wpm-test").offset().left);
+
+    start_test();
+    sim_on_start = wpm;
+}

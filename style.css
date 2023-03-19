@@ -50,6 +50,7 @@
     transition: filter 0.2s ease-out;
     border: none;
     outline: none;
+    flex-wrap: wrap;
 }
 
 .wpm-test:not(:focus) {
@@ -58,6 +59,7 @@
 
 .wpm-test .word {
     display: flex;
+    height: 30px;
 }
 
 .wpm-test .word .letter {
@@ -65,6 +67,11 @@
     font-size: 23px;
     font-family: monospace;
     color: white;
+    transition: all 1s ease;
+}
+
+.bold-letter {
+    font-weight: 600 !important;
 }
 
 .wpm-test .space {
@@ -72,14 +79,21 @@
 }
 
 .wpm-test .word .letter.correct {
-    color: rgb(89, 255, 89);
+    color: rgb(89, 255, 133);
+    /* 25px in width drop shadow */
+    filter: drop-shadow(0 0 5px rgb(108, 255, 89)) blur(10px);
+    transform: scaleY(5);
+    opacity: 0;
 }
 
 .wpm-test .word .letter.incorrect {
     color: rgb(255, 114, 114);
+    filter: blur(1px);
+    text-shadow: 0 0 5px rgb(255, 114, 114);
 }
 
-#cursor {
+#cursor,
+#cursor-sim {
     position: relative;
     top: 0;
     left: 0;
