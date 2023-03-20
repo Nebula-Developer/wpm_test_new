@@ -67,21 +67,44 @@ function create_word(word) {
 
 function calculate_test_results() {
     if (wpm_test.test_mode == "words") {
-        // Calculate WPM based on how long it took
-        // to type the specified number of words,
-        // also counting how big the words were
-        var time = wpm_test.test_config.end - wpm_test.test_config.start;
-        var sentenceLength = wpm_test.text.length;
-        var wpm = (sentenceLength / 5) / (time / 60000);
-        return wpm;
+        return calculate_words_results();
     } else if (wpm_test.test_mode == "time") {
-        // Calculate WPM based on how many words
-        // were typed in the specified time
-        var time = wpm_test.test_config.end - wpm_test.test_config.start;
-        var sentenceLength = wpm_test.text.length;
-        var wpm = (sentenceLength / 5) / (time / 60000);
-        return wpm;
+        return calculate_time_results();
     }
+}
+
+function calculate_words_results() {
+    var time = wpm_test.test_config.end - wpm_test.test_config.start;
+    var sentenceLength = wpm_test.text.length - wpm_test.mistakes.length;
+    var cpm = sentenceLength / (time / 60000);
+    var wpm = cpm / 5;
+
+    var accuracy = (wpm_test.text.length - wpm_test.mistakes.length) / wpm_test.text.length * 100;
+    var accuracy = Math.round(accuracy * 100) / 100;
+
+    return {
+        wpm: wpm,
+        cpm: cpm,
+        accuracy: accuracy
+    };
+}
+
+function calculate_time_results() {
+    var time = wpm_test.test_config.end - wpm_test.test_config.start;
+    var sentenceLength = wpm_test.text.length - wpm_test.mistakes.length;
+    var wpm = (sentenceLength / 5) / (time / 60000);
+
+    var chars = wpm_test.text.length;
+    var cpm = chars / (time / 60000);
+
+    var accuracy = (wpm_test.text.length - wpm_test.mistakes.length) / wpm_test.text.length * 100;
+    var accuracy = Math.round(accuracy * 100) / 100;
+
+    return {
+        wpm: wpm,
+        cpm: cpm,
+        accuracy: accuracy
+    };
 }
 
 function start_test() {
@@ -91,6 +114,7 @@ function start_test() {
 
 function reset_test() {
     if (sim_lock != null) clearInterval(sim_lock);
+    $("#words-view").text("0 / " + wpm_test.test_config.wordCount);
     create_test(gen_sentence(wpm_test.test_config.wordCount));
     start_test();
     $("#wpm-test").trigger("focus");

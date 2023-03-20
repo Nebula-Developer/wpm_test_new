@@ -59,6 +59,11 @@ function handle_keypress(e) {
         $("#cursor").css("left", curElm.offset().left - $("#wpm-test").offset().left);
     }
 
+    // Get cur word index
+    var userWords = wpm_test.user_text.split(" ");
+    var curWordIndex = userWords.length - 1;
+    $("#words-view").text((curWordIndex + 1) + " / " + wpm_test.test_config.wordCount);
+
     if (wpm_test.cursor_index >= wpm_test.text_elms.length - 1) {
         end_test();
     }
@@ -102,7 +107,7 @@ function simulate_wpm(wpm) {
 }
 
 function repeat_test() {
-    var wpm = calculate_test_results();
+    var wpm = calculate_test_results().wpm;
     wpm_test.test_active = false;
     wpm_test.test_config.start = null;
     wpm_test.test_config.user_text = "";
@@ -127,11 +132,12 @@ function end_test() {
     $("#wpm-test").trigger("blur");
     $("#wpm-test-result").removeClass("hidden");
 
-    var wpm = calculate_test_results();
-    wpm = Math.round(wpm);
+    var results = calculate_test_results();
+    console.log(results);
+    var wpm = Math.round(results.wpm);
     $("#wpm-test-result-wpm").text(wpm);
     $("#wpm-test-result-cpm").text(wpm * 5);
 
-    var accuracy = calculate_test_accuracy();
-    $("#wpm-test-result-acc").text(Math.round(accuracy * 100));
+    var accuracy = results.accuracy;
+    $("#wpm-test-result-acc").text(accuracy);
 }
